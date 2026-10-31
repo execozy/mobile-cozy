@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git zip unzip autoconf libtool \
+            pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 \
+            cmake libffi-dev libssl-dev
+
+      - name: Install Buildozer
+        run: pip install --upgrade buildozer
+
+      - name: Configure and build APK
+        working-directory: app
+        run: |
+          buildozer init
+          sed -i 's/^title = .*/title = Hello World/' buildozer.spec
+          sed -i 's/^requirements = .*/requirements = python3,kivy,kivymd/' buildozer.spec
+          sed -i '/^requirements = /a android.accept_sdk_license = True' buildozer.spec
+          buildozer -v android debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: app/bin/*.apk
