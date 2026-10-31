@@ -32,6 +32,8 @@ jobs:
 
       - name: Configure and build APK
         working-directory: app
+        env:
+          PIP_NO_WARN_SCRIPT_LOCATION: "1"
         run: |
           buildozer init
           sed -i 's/^title = .*/title = Hello World/' buildozer.spec
